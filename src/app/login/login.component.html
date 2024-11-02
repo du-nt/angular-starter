@@ -1,0 +1,31 @@
+<form [formGroup]="loginForm" class="login-form" (ngSubmit)="handleSubmit()">
+  <div class="flex flex-column gap-2">
+    <label for="username">Username</label>
+    <input id="username" formControlName="username" />
+  </div>
+
+  <div class="flex flex-column gap-2">
+    <label for="password">Password</label>
+    <input id="password" formControlName="password" />
+  </div>
+
+  <button type="submit">Login</button>
+</form>
+
+@if (login.isPending()) {
+<div
+  style="
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    right: 0;
+    left: 0;
+    background-color: rgba(240, 255, 255, 0.527);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+  "
+>
+  Submitting
+</div>
+}
