@@ -6,9 +6,10 @@ import {
   ReactiveFormsModule,
 } from '@angular/forms';
 import { injectQueryClient } from '@tanstack/angular-query-experimental';
-import { AuthService, TokenBulk } from '../../services/auth.service';
+import { AuthService } from '../../services/auth.service';
 import { QueryService } from '../../services/query.service';
 import { Profile } from '../app.component';
+import { setTokens, TokenBulk } from '../../utils';
 
 @Component({
   selector: 'app-login',
@@ -38,7 +39,7 @@ export class LoginComponent {
   login = this.queryService.mutation<TokenBulk>(() => ({
     endpoint: 'login',
     onSuccess: async (tokens) => {
-      this.authService.setTokens(tokens);
+      setTokens(tokens);
       await this.profile.refetch();
       // Show toast message
     },

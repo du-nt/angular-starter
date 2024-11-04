@@ -1,11 +1,7 @@
 import { inject, Injectable, signal } from '@angular/core';
 import { catchError, from, Observable, tap, throwError } from 'rxjs';
 import { ApiService } from './api.service';
-
-export type TokenBulk = {
-  accessToken: string;
-  refreshToken: string;
-};
+import { clearTokens, getTokens, setTokens, TokenBulk } from '../utils';
 
 @Injectable({
   providedIn: 'root',
@@ -15,30 +11,8 @@ export class AuthService {
 
   isAuthenticatedSignal = signal<boolean>(false);
 
-  getTokens(): TokenBulk {
-    const accessToken = localStorage.getItem('access_token');
-    const refreshToken = localStorage.getItem('refresh_token');
-
-    return {
-      accessToken: accessToken || '',
-      refreshToken: refreshToken || '',
-    };
-  }
-
-  setTokens(tokens: TokenBulk): void {
-    const { accessToken, refreshToken } = tokens;
-
-    localStorage.setItem('access_token', accessToken);
-    localStorage.setItem('refresh_token', refreshToken);
-  }
-
-  clearTokens(): void {
-    localStorage.removeItem('access_token');
-    localStorage.removeItem('refresh_token');
-  }
-
   refreshToken(): Observable<TokenBulk> {
-    const { refreshToken } = this.getTokens();
+    const { refreshToken } = getTokens();
 
     return from(
       this.apiService.post<TokenBulk>('token/refresh', {
@@ -46,10 +20,10 @@ export class AuthService {
       })
     ).pipe(
       tap((response) => {
-        this.setTokens(response);
+        setTokens(response);
       }),
       catchError((error) => {
-        this.clearTokens();
+        clearTokens();
         this.unAuthenticate();
 
         return throwError(() => error);
@@ -63,7 +37,7 @@ export class AuthService {
 
   unAuthenticate() {
     this.isAuthenticatedSignal.set(false);
-    this.clearTokens();
+    clearTokens();
   }
 
   isAuthenticated() {

@@ -16,7 +16,8 @@ import {
   take,
   throwError,
 } from 'rxjs';
-import { AuthService, TokenBulk } from './auth.service';
+import { AuthService } from './auth.service';
+import { getTokens, TokenBulk } from '../utils';
 
 export class AuthInterceptorService implements HttpInterceptor {
   authService = inject(AuthService);
@@ -69,7 +70,7 @@ export class AuthInterceptorService implements HttpInterceptor {
   private addTokenToRequest(
     request: HttpRequest<unknown>
   ): HttpRequest<unknown> {
-    const { accessToken } = this.authService.getTokens();
+    const { accessToken } = getTokens();
 
     if (!accessToken) return request;
 
