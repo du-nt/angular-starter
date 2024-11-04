@@ -23,7 +23,6 @@ export class AuthService {
         setTokens(response);
       }),
       catchError((error) => {
-        clearTokens();
         this.unAuthenticate();
 
         return throwError(() => error);
