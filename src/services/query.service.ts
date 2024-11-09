@@ -33,7 +33,7 @@ export class QueryService {
       TData,
       TQueryKey
     > & {
-      httpClientOptions?: HttpClientOptions;
+      httpClientOptions?: HttpClientOptions & { method: HttpClientMethod };
       onSuccess?: (data: TQueryFnData) => void;
       onError?: (error: unknown) => void;
     },
@@ -55,7 +55,9 @@ export class QueryService {
           queryKey,
         }: QueryFunctionContext): Promise<TQueryFnData> => {
           try {
-            const data = await this.apiService.get<TQueryFnData>(
+            const method = httpClientOptions?.method || 'get';
+
+            const data = await this.apiService[method]<TQueryFnData>(
               `${queryKey?.[0]}`,
               httpClientOptions
             );
