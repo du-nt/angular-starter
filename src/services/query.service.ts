@@ -6,6 +6,7 @@ import {
   DefaultError,
   injectMutation,
   injectQuery,
+  injectQueryClient,
   MutationFunction,
   QueryClient,
   QueryFunction,
@@ -35,10 +36,13 @@ export class QueryService {
     > & {
       httpClientOptions?: HttpClientOptions & { method: HttpClientMethod };
       onSuccess?: (data: TQueryFnData) => void;
-      onError?: (error: unknown) => void;
+      onError?: (error: TError) => void;
     },
     injector?: Injector
   ): CreateQueryResult<TData, TError> {
+    const qClient = injectQueryClient();
+    const defaultRetry = qClient.getDefaultOptions().queries?.retry;
+
     return injectQuery<TQueryFnData, TError, TData, TQueryKey>(
       (client: QueryClient) => {
         const options = optionsFn(client);
@@ -48,32 +52,50 @@ export class QueryService {
           httpClientOptions,
           onSuccess,
           onError,
+          retry: optionRetry,
           ...restOptions
         } = options;
+
+        const retry = optionRetry || defaultRetry;
 
         const defaultQueryFn: QueryFunction<TQueryFnData, TQueryKey> = async ({
           queryKey,
         }: QueryFunctionContext): Promise<TQueryFnData> => {
-          try {
-            const method = httpClientOptions?.method || 'get';
+          const method = httpClientOptions?.method || 'get';
 
-            const data = await this.apiService[method]<TQueryFnData>(
-              `${queryKey?.[0]}`,
-              httpClientOptions
-            );
+          const data = await this.apiService[method]<TQueryFnData>(
+            `${queryKey?.[0]}`,
+            httpClientOptions
+          );
 
-            onSuccess && onSuccess(data);
+          onSuccess && onSuccess(data);
 
-            return data;
-          } catch (error) {
-            onError && onError(error);
-            throw error;
-          }
+          return data;
         };
 
         return {
           queryKey,
           queryFn: queryFn || defaultQueryFn,
+          retry: (failureCount, error) => {
+            if (retry === false) {
+              console.log(failureCount);
+              onError && onError(error);
+
+              return false;
+            }
+
+            if (retry === undefined) {
+              failureCount >= 3 && onError && onError(error);
+              return failureCount < 3;
+            }
+
+            if (typeof retry === 'number') {
+              failureCount >= retry && onError && onError(error);
+              return failureCount < retry;
+            }
+
+            return true;
+          },
           ...restOptions,
         };
       },
