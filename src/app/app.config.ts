@@ -23,7 +23,7 @@ export const appConfig: ApplicationConfig = {
     provideAngularQuery(
       new QueryClient({
         defaultOptions: {
-          queries: { retry: false, refetchOnWindowFocus: false },
+          queries: { refetchOnWindowFocus: false },
         },
       })
     ),
